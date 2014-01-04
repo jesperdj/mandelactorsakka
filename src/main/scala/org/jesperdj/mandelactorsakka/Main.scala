@@ -21,17 +21,20 @@ object Main extends App {
   val width = 1920
   val height = 1080
 
-  val center = Complex(-1.15198, 0.21190)
-  val scale = 0.00120
-  val maxIterations = 4000
+  val center = Complex(-0.743643, 0.131825)
+  val scale = 0.00006
+  val maxIterations = 10000
 
   val palette = new Palette(
-    PalettePoint(0.0, Color(0.0, 0.0, 0.6)),
-    PalettePoint(0.02, Color(1.0, 0.5, 0.0)),
-    PalettePoint(0.08, Color(0.7, 0.1, 0.5)),
-    PalettePoint(0.15, Color(0.5, 0.5, 0.7)),
-    PalettePoint(0.4, Color(0.2, 0.2, 1.0)),
-    PalettePoint(1.0, Color(1.0, 1.0, 1.0)))
+    PalettePoint(0.000, Color(0.0, 0.0, 0.4)),
+    PalettePoint(0.010, Color(0.1, 0.1, 0.1)),
+    PalettePoint(0.018, Color(1.0, 1.0, 0.3)),
+    PalettePoint(0.022, Color(0.0, 0.4, 0.0)),
+    PalettePoint(0.040, Color(1.0, 1.0, 1.0)),
+    PalettePoint(0.200, Color(0.0, 0.0, 0.6)),
+    PalettePoint(0.500, Color(0.0, 0.0, 0.0)),
+    PalettePoint(1.000, Color(1.0, 1.0, 1.0))
+  )
 
   val samplerFactory = { rect: Rectangle => new StratifiedSampler(rect, 2) }
   val filter = new MitchellFilter
