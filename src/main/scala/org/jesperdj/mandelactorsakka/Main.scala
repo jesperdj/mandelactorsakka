@@ -38,5 +38,5 @@ object Main extends App {
 
   val mandelbrot = new Mandelbrot(Rectangle(0, 0, width - 1, height - 1), center, scale, maxIterations, palette)
 
-  ActorSystem("MandelActorsAkka").actorOf(MainActor.props(width, height, samplerFactory, filter, mandelbrot))
+  ActorSystem("MandelActorsAkka").actorOf(MainActor.props(width, height, samplerFactory, filter, mandelbrot), "main")
 }

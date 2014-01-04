@@ -15,22 +15,25 @@
  */
 package org.jesperdj.mandelactorsakka
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import javax.imageio.ImageIO
 import java.io.File
 
 object MainActor {
-  def props(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter, renderFunction: (Double, Double) => Color) =
+  def props(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter,
+            renderFunction: (Double, Double) => Color) =
     Props(new MainActor(width, height, samplerFactory, filter, renderFunction))
 }
 
-class MainActor(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter, renderFunction: (Double, Double) => Color) extends Actor {
+class MainActor(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter,
+                renderFunction: (Double, Double) => Color) extends Actor with ActorLogging {
   import RenderActor._
 
-  context.actorOf(RenderActor.props(width, height, samplerFactory, filter, renderFunction)) ! Render
+  context.actorOf(RenderActor.props(width, height, samplerFactory, filter, renderFunction), "render") ! Render
 
   def receive = {
     case RenderResult(raster) =>
+      log.info("Saving image")
       ImageIO.write(raster.toImage, "png", new File("C:\\Temp\\mandelbrot.png"))
       context.system.shutdown()
   }

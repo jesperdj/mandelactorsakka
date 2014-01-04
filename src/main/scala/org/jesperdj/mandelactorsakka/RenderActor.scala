@@ -15,17 +15,19 @@
  */
 package org.jesperdj.mandelactorsakka
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 
 object RenderActor {
   case object Render
   case class RenderResult(raster: PixelRaster)
 
-  def props(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter, renderFunction: (Double, Double) => Color) =
+  def props(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter,
+            renderFunction: (Double, Double) => Color) =
     Props(new RenderActor(width, height, samplerFactory, filter, renderFunction))
 }
 
-class RenderActor(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter, renderFunction: (Double, Double) => Color) extends Actor {
+class RenderActor(width: Int, height: Int, samplerFactory: Rectangle => Sampler, filter: Filter,
+                  renderFunction: (Double, Double) => Color) extends Actor with ActorLogging {
   import RenderActor._
   import ComputeActor._
 
@@ -35,13 +37,16 @@ class RenderActor(width: Int, height: Int, samplerFactory: Rectangle => Sampler,
     case Render =>
       val rectangle = Rectangle(0, 0, width - 1, height - 1)
       val tiles = createTiles(rectangle, tileSizeThreshold)
+      val numberOfTiles = tiles.size
+      log.info(s"Number of tiles: $numberOfTiles")
       val raster = new PixelRaster(width, height)
-      context.become(rendering(raster, tiles.size, sender))
+      context.become(rendering(raster, numberOfTiles, sender))
       tiles foreach { tile => context.actorOf(ComputeActor.props(samplerFactory(tile), renderFunction)) ! Compute }
   }
 
   def rendering(raster: PixelRaster, numberOfActiveActors: Int, receiver: ActorRef): Receive = {
     case ComputeResult(result) =>
+      if (numberOfActiveActors % 100 == 0) log.info(s"Progress: $numberOfActiveActors active actors remaining")
       context.stop(sender)
       result foreach { case (x, y, color) => updateRaster(raster, x, y, color) }
       if (numberOfActiveActors > 1) context.become(rendering(raster, numberOfActiveActors - 1, receiver))
