@@ -15,20 +15,18 @@
  */
 package org.jesperdj.mandelactorsakka
 
-class Mandelbrot(maxIterations: Int) extends (Complex => Double) {
-  private val lg2 = math.log(2.0)
-  private def log2(value: Double) = math.log(value) / lg2
+class MapRasterToComplex(width: Int, height: Int, center: Complex, scale: Double) extends ((Double, Double) => Complex) {
+  private val rasterWidth = width.toDouble
+  private val rasterHeight = height.toDouble
 
-  def apply(c: Complex): Double = {
-    var z = Complex.Zero
-    var i = 0
-
-    while (z.modulusSquared <= 4.0 && i < maxIterations) {
-      z = z * z + c
-      i += 1
-    }
-
-    // Use normalized iteration count for smooth coloring
-    if (i < maxIterations) (i - log2(log2(z.modulus))) / maxIterations else Double.PositiveInfinity
+  private val (minC, maxC) = {
+    val ratio = rasterWidth / rasterHeight
+    (Complex(center.re - scale, center.im - scale / ratio), Complex(center.re + scale, center.im + scale / ratio))
   }
+
+  private val widthC = maxC.re - minC.re
+  private val heightC = maxC.im - minC.im
+
+  def apply(x: Double, y: Double): Complex =
+    Complex(minC.re + (widthC * x / rasterWidth), maxC.im - (heightC * y / rasterHeight))
 }

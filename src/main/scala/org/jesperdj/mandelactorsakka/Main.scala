@@ -25,6 +25,12 @@ object Main extends App {
   val scale = 0.00006
   val maxIterations = 10000
 
+  val samplerFactory = { rect: Rectangle => new StratifiedSampler(rect, 2) }
+  val filter = new MitchellFilter
+
+  val mapRasterToComplex = new MapRasterToComplex(width, height, center, scale)
+  val mandelbrot = new Mandelbrot(maxIterations)
+
   val palette = new Palette(
     PalettePoint(0.000, Color(0.0, 0.0, 0.4)),
     PalettePoint(0.010, Color(0.1, 0.1, 0.1)),
@@ -33,13 +39,11 @@ object Main extends App {
     PalettePoint(0.040, Color(1.0, 1.0, 1.0)),
     PalettePoint(0.200, Color(0.0, 0.0, 0.6)),
     PalettePoint(0.500, Color(0.0, 0.0, 0.0)),
-    PalettePoint(1.000, Color(1.0, 1.0, 1.0))
+    PalettePoint(1.000, Color(1.0, 1.0, 1.0)),
+    PalettePoint(Double.PositiveInfinity, Color.Black)
   )
 
-  val samplerFactory = { rect: Rectangle => new StratifiedSampler(rect, 2) }
-  val filter = new MitchellFilter
+  val renderFunction = { (x: Double, y: Double) => palette(mandelbrot(mapRasterToComplex(x, y))) }
 
-  val mandelbrot = new Mandelbrot(Rectangle(0, 0, width - 1, height - 1), center, scale, maxIterations, palette)
-
-  ActorSystem("MandelActorsAkka").actorOf(MainActor.props(width, height, samplerFactory, filter, mandelbrot), "main")
+  ActorSystem("MandelActorsAkka").actorOf(MainActor.props(width, height, samplerFactory, filter, renderFunction), "main")
 }
